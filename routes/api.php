@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,7 +21,11 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Protected routes
 Route::middleware('auth:jwt')->group(function () {
+    // Auth
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
+
+    // Orders
+    Route::apiResource('/orders', OrderController::class);
 });
