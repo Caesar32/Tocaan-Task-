@@ -16,7 +16,6 @@ class PaymentGatewayFactory
      * Accepts either a PaymentMethod enum or a raw string value for
      * convenience and defensive validation.
      *
-     * @param  PaymentMethod|string  $method
      *
      * @throws InvalidArgumentException When an unsupported method value is given.
      */
@@ -29,8 +28,8 @@ class PaymentGatewayFactory
         }
 
         return match ($method) {
-            PaymentMethod::PayPal => new PaypalGateway(),
-            PaymentMethod::CreditCard => new CreditCardGateway(),
+            PaymentMethod::PayPal => new PaypalGateway,
+            PaymentMethod::CreditCard => new CreditCardGateway,
         };
     }
 }

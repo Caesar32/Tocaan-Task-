@@ -6,8 +6,8 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends BaseApiController
 {
@@ -40,7 +40,7 @@ class AuthController extends BaseApiController
                 'user' => new UserResource($result['user']),
                 'token' => $result['token'],
             ]);
-        } catch (\Illuminate\Auth\AuthenticationException $e) {
+        } catch (AuthenticationException $e) {
             return $this->errorResponse(
                 'Invalid credentials',
                 401

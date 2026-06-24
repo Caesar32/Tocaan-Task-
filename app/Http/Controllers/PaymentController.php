@@ -8,6 +8,7 @@ use App\Http\Resources\PaymentResource;
 use App\Services\Payment\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class PaymentController extends BaseApiController
 {
@@ -43,7 +44,7 @@ class PaymentController extends BaseApiController
                 new PaymentResource($payment),
                 201
             );
-        } catch (\Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException $e) {
+        } catch (UnprocessableEntityHttpException $e) {
             return $this->errorResponse($e->getMessage(), 422);
         }
     }

@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
-use App\Models\OrderItem;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class OrderService
 {
@@ -111,12 +111,12 @@ class OrderService
     /**
      * Delete an order if it has no associated payments.
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\ConflictHttpException
+     * @throws ConflictHttpException
      */
     public function delete(Order $order): void
     {
         if ($order->payments()->exists()) {
-            throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+            throw new ConflictHttpException(
                 'Order cannot be deleted because it has associated payments.'
             );
         }
@@ -127,7 +127,6 @@ class OrderService
     /**
      * Create order items and return the calculated total.
      *
-     * @param  Order  $order
      * @param  array<int, array<string, mixed>>  $items
      * @return string Calculated total as a decimal string
      */

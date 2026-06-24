@@ -23,7 +23,7 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'payment_id' => 'pay_' . Str::uuid()->toString(),
+            'payment_id' => 'pay_'.Str::uuid()->toString(),
             'payment_method' => fake()->randomElement(PaymentMethod::cases()),
             'status' => PaymentStatus::Pending,
             'amount' => fake()->randomFloat(2, 10, 1000),
@@ -39,7 +39,7 @@ class PaymentFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'status' => PaymentStatus::Successful,
             'gateway_response' => [
-                'transaction_id' => 'txn_' . Str::uuid()->toString(),
+                'transaction_id' => 'txn_'.Str::uuid()->toString(),
                 'status' => 'approved',
                 'message' => 'Payment processed successfully',
             ],

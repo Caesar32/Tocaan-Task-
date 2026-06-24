@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Payment;
 
+use App\Contracts\PaymentGatewayInterface;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\User;
@@ -16,7 +17,7 @@ class CreditCardGatewayTest extends TestCase
     public function test_pay_returns_array_with_status_and_gateway_response(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new CreditCardGateway();
+        $gateway = new CreditCardGateway;
 
         $result = $gateway->pay($order);
 
@@ -28,7 +29,7 @@ class CreditCardGatewayTest extends TestCase
     public function test_gateway_status_must_be_payment_status_enum_value(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new CreditCardGateway();
+        $gateway = new CreditCardGateway;
 
         $result = $gateway->pay($order);
 
@@ -42,7 +43,7 @@ class CreditCardGatewayTest extends TestCase
     public function test_gateway_response_must_be_an_array(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new CreditCardGateway();
+        $gateway = new CreditCardGateway;
 
         $result = $gateway->pay($order);
 
@@ -53,7 +54,7 @@ class CreditCardGatewayTest extends TestCase
     public function test_successful_payment_includes_transaction_id(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new CreditCardGateway();
+        $gateway = new CreditCardGateway;
 
         $foundSuccessful = false;
 
@@ -74,7 +75,7 @@ class CreditCardGatewayTest extends TestCase
     public function test_failed_payment_response_has_message(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new CreditCardGateway();
+        $gateway = new CreditCardGateway;
 
         $foundFailed = false;
 
@@ -94,8 +95,8 @@ class CreditCardGatewayTest extends TestCase
 
     public function test_credit_card_gateway_implements_contract(): void
     {
-        $gateway = new CreditCardGateway();
+        $gateway = new CreditCardGateway;
 
-        $this->assertInstanceOf(\App\Contracts\PaymentGatewayInterface::class, $gateway);
+        $this->assertInstanceOf(PaymentGatewayInterface::class, $gateway);
     }
 }

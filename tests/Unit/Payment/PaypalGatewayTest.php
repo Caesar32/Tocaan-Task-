@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Payment;
 
-use App\Enums\OrderStatus;
+use App\Contracts\PaymentGatewayInterface;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\User;
@@ -17,7 +17,7 @@ class PaypalGatewayTest extends TestCase
     public function test_pay_returns_array_with_status_and_gateway_response(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new PaypalGateway();
+        $gateway = new PaypalGateway;
 
         $result = $gateway->pay($order);
 
@@ -29,7 +29,7 @@ class PaypalGatewayTest extends TestCase
     public function test_gateway_status_must_be_payment_status_enum_value(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new PaypalGateway();
+        $gateway = new PaypalGateway;
 
         $result = $gateway->pay($order);
 
@@ -43,7 +43,7 @@ class PaypalGatewayTest extends TestCase
     public function test_gateway_response_must_be_an_array(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new PaypalGateway();
+        $gateway = new PaypalGateway;
 
         $result = $gateway->pay($order);
 
@@ -55,7 +55,7 @@ class PaypalGatewayTest extends TestCase
     {
         // Run multiple times to likely hit the successful path (90% probability)
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new PaypalGateway();
+        $gateway = new PaypalGateway;
 
         $foundSuccessful = false;
 
@@ -76,7 +76,7 @@ class PaypalGatewayTest extends TestCase
     public function test_failed_payment_response_has_message(): void
     {
         $order = Order::factory()->for(User::factory())->create();
-        $gateway = new PaypalGateway();
+        $gateway = new PaypalGateway;
 
         $foundFailed = false;
 
@@ -96,8 +96,8 @@ class PaypalGatewayTest extends TestCase
 
     public function test_paypal_gateway_implements_contract(): void
     {
-        $gateway = new PaypalGateway();
+        $gateway = new PaypalGateway;
 
-        $this->assertInstanceOf(\App\Contracts\PaymentGatewayInterface::class, $gateway);
+        $this->assertInstanceOf(PaymentGatewayInterface::class, $gateway);
     }
 }

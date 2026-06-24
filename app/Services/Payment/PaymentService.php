@@ -7,8 +7,10 @@ use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class PaymentService
 {
@@ -44,7 +46,7 @@ class PaymentService
     /**
      * Get all payments for a specific order belonging to the authenticated user.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getByOrderId(int $orderId)
     {
@@ -62,7 +64,7 @@ class PaymentService
      *
      * @param  array<string, mixed>  $data
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException
+     * @throws UnprocessableEntityHttpException
      */
     public function process(array $data): Payment
     {
@@ -75,7 +77,7 @@ class PaymentService
 
         // Business rule: payments only for confirmed orders
         if ($order->status !== OrderStatus::Confirmed) {
-            throw new \Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException(
+            throw new UnprocessableEntityHttpException(
                 'Payments can only be processed for confirmed orders.'
             );
         }
@@ -90,7 +92,7 @@ class PaymentService
         // Create payment record regardless of result
         return Payment::create([
             'order_id' => $order->id,
-            'payment_id' => 'pay_' . Str::uuid()->toString(),
+            'payment_id' => 'pay_'.Str::uuid()->toString(),
             'payment_method' => $method,
             'status' => $result['status'],
             'amount' => $order->total,

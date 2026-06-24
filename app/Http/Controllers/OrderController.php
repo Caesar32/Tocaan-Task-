@@ -9,6 +9,7 @@ use App\Http\Resources\OrderResource;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class OrderController extends BaseApiController
 {
@@ -80,7 +81,7 @@ class OrderController extends BaseApiController
             $this->orderService->delete($order);
 
             return $this->successResponse('Order deleted successfully');
-        } catch (\Symfony\Component\HttpKernel\Exception\ConflictHttpException $e) {
+        } catch (ConflictHttpException $e) {
             return $this->errorResponse($e->getMessage(), 409);
         }
     }

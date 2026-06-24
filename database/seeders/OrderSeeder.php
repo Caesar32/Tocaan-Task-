@@ -100,12 +100,12 @@ class OrderSeeder extends Seeder
 
         Payment::create([
             'order_id' => $order2->id,
-            'payment_id' => 'pay_' . Str::uuid()->toString(),
+            'payment_id' => 'pay_'.Str::uuid()->toString(),
             'payment_method' => PaymentMethod::CreditCard,
             'status' => PaymentStatus::Successful,
             'amount' => $order2->total,
             'gateway_response' => [
-                'transaction_id' => 'txn_' . Str::uuid()->toString(),
+                'transaction_id' => 'txn_'.Str::uuid()->toString(),
                 'status' => 'approved',
                 'message' => 'Payment processed successfully',
             ],

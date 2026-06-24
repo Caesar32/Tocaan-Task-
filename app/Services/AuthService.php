@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -35,14 +36,14 @@ class AuthService
      *
      * @return array{user: User, token: string}
      *
-     * @throws \Illuminate\Auth\AuthenticationException
+     * @throws AuthenticationException
      */
     public function login(array $credentials): array
     {
         $token = JWTAuth::attempt($credentials);
 
         if (! $token) {
-            throw new \Illuminate\Auth\AuthenticationException('Invalid credentials');
+            throw new AuthenticationException('Invalid credentials');
         }
 
         $user = JWTAuth::setToken($token)->user();
@@ -61,7 +62,7 @@ class AuthService
         $user = Auth::guard('jwt')->user();
 
         if (! $user) {
-            throw new \Illuminate\Auth\AuthenticationException('Unauthenticated');
+            throw new AuthenticationException('Unauthenticated');
         }
 
         return $user;

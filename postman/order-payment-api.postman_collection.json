@@ -1,0 +1,1105 @@
+{
+  "info": {
+    "name": "Order & Payment Management API",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "description": "A Laravel 12 REST API for managing customer Orders and processing Payments through a pluggable, multi-gateway architecture (Strategy + Factory patterns) secured with JWT authentication.\n\n## Getting Started\n1. Start the server: `php artisan serve`\n2. Select the **Order & Payment API — Local** environment.\n3. Run **Register** or **Login** — the `token` variable is set automatically and used by all protected requests.\n\n## Environment Variables\n- `base_url`  — API base path (e.g. `http://localhost:8000/api`)\n- `token`     — JWT auth token (auto-populated after login/register)\n- `order_id`  — created order ID (auto-populated by Create Order)\n- `payment_id`— created payment ID\n\n## Auth\nAll protected requests use the Bearer token type, reading the `token` variable.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "JWT-based authentication: registration, login, profile, logout and token refresh.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{user_name}}\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\",\n  \"password_confirmation\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": ["{{base_url}}"],
+              "path": ["register"]
+            },
+            "description": "Create a new user account and receive a JWT token. The token is auto-saved to the `token` environment variable via the Tests script."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.data && json.data.token) {",
+                  "    pm.environment.set('token', json.data.token);",
+                  "    console.log('Token saved to the token variable.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["register"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"created_at\": \"2026-06-24T10:00:00+00:00\",\n      \"updated_at\": \"2026-06-24T10:00:00+00:00\"\n    },\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["register"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"password\": \"short\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": {\n    \"name\": [\"The name field is required.\"],\n    \"email\": [\"The email must be a valid email address.\"],\n    \"password\": [\"The password must be at least 8 characters.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticate with email and password to receive a JWT token. The token is auto-saved to the `token` environment variable via the Tests script."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.data && json.data.token) {",
+                  "    pm.environment.set('token', json.data.token);",
+                  "    console.log('Token saved to the token variable.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"created_at\": \"2026-06-24T10:00:00+00:00\",\n      \"updated_at\": \"2026-06-24T10:00:00+00:00\"\n    },\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"\n  }\n}"
+            },
+            {
+              "name": "401 Invalid Credentials",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"wrong-password\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid credentials\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": ["{{base_url}}"],
+              "path": ["me"]
+            },
+            "description": "Retrieve the authenticated user's profile. Requires a valid Bearer token."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["me"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User profile retrieved successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"created_at\": \"2026-06-24T10:00:00+00:00\",\n      \"updated_at\": \"2026-06-24T10:00:00+00:00\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["refresh"]
+            },
+            "description": "Exchange the current valid token for a fresh one. The new token is auto-saved to the `token` environment variable via the Tests script."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.data && json.data.token) {",
+                  "    pm.environment.set('token', json.data.token);",
+                  "    console.log('Refreshed token saved to the token variable.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/refresh",
+                  "host": ["{{base_url}}"],
+                  "path": ["refresh"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"created_at\": \"2026-06-24T10:00:00+00:00\",\n      \"updated_at\": \"2026-06-24T10:00:00+00:00\"\n    },\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            },
+            "description": "Invalidate (blacklist) the current token so it can no longer be used. Clear the `token` variable via the Tests script."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('token', '');",
+                  "console.log('Token cleared after logout.');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["logout"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User logged out successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Full CRUD for orders. All requests require a valid Bearer token and are scoped to the authenticated user.",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders?status=confirmed&per_page=15&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed",
+                  "description": "Optional. One of: pending, confirmed, cancelled"
+                },
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Optional. 1-100 (default 15)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number"
+                }
+              ]
+            },
+            "description": "List the authenticated user's orders with pagination and optional status filtering."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 2,\n      \"customer_name\": \"Jane Doe\",\n      \"customer_email\": \"jane@example.com\",\n      \"status\": \"confirmed\",\n      \"total\": \"219.96\",\n      \"items\": [\n        {\n          \"id\": 2,\n          \"product_name\": \"Mechanical Keyboard\",\n          \"quantity\": 1,\n          \"price\": \"129.99\",\n          \"subtotal\": \"129.99\"\n        }\n      ],\n      \"payments_count\": 1,\n      \"created_at\": \"2026-06-24T10:00:00+00:00\",\n      \"updated_at\": \"2026-06-24T10:00:00+00:00\"\n    }\n  ],\n  \"links\": {\n    \"first\": \"http://localhost:8000/api/orders?page=1\",\n    \"last\": \"http://localhost:8000/api/orders?page=1\",\n    \"prev\": null,\n    \"next\": null\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"per_page\": 15,\n    \"total\": 1,\n    \"last_page\": 1\n  },\n  \"success\": true,\n  \"message\": \"Orders retrieved successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"John Doe\",\n  \"customer_email\": \"john@example.com\",\n  \"status\": \"confirmed\",\n  \"items\": [\n    {\n      \"product_name\": \"Wireless Headphones\",\n      \"quantity\": 2,\n      \"price\": 59.99\n    },\n    {\n      \"product_name\": \"USB-C Cable\",\n      \"quantity\": 3,\n      \"price\": 12.99\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            },
+            "description": "Create a new order with one or more items. The order total is calculated server-side from item subtotals. The created order ID is auto-saved to the `order_id` variable via the Tests script."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.data && json.data.id) {",
+                  "    pm.environment.set('order_id', json.data.id);",
+                  "    console.log('Order ID saved: ' + json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"customer_name\": \"John Doe\",\n  \"customer_email\": \"john@example.com\",\n  \"items\": [\n    { \"product_name\": \"Wireless Headphones\", \"quantity\": 2, \"price\": 59.99 }\n  ]\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order created successfully\",\n  \"data\": {\n    \"id\": 4,\n    \"customer_name\": \"John Doe\",\n    \"customer_email\": \"john@example.com\",\n    \"status\": \"confirmed\",\n    \"total\": \"119.98\",\n    \"items\": [\n      {\n        \"id\": 5,\n        \"product_name\": \"Wireless Headphones\",\n        \"quantity\": 2,\n        \"price\": \"59.99\",\n        \"subtotal\": \"119.98\"\n      },\n      {\n        \"id\": 6,\n        \"product_name\": \"USB-C Cable\",\n        \"quantity\": 3,\n        \"price\": \"12.99\",\n        \"subtotal\": \"38.97\"\n      }\n    ],\n    \"payments_count\": 0,\n    \"created_at\": \"2026-06-24T10:05:00+00:00\",\n    \"updated_at\": \"2026-06-24T10:05:00+00:00\"\n  }\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"customer_name\": \"John Doe\",\n  \"customer_email\": \"not-an-email\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": {\n    \"customer_email\": [\"The customer email must be a valid email address.\"],\n    \"items\": [\"The order must contain at least one item.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            },
+            "description": "Retrieve a single order with its items and payments count."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order retrieved successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"customer_name\": \"John Doe\",\n    \"customer_email\": \"john@example.com\",\n    \"status\": \"confirmed\",\n    \"total\": \"119.98\",\n    \"items\": [\n      {\n        \"id\": 1,\n        \"product_name\": \"Wireless Headphones\",\n        \"quantity\": 2,\n        \"price\": \"59.99\",\n        \"subtotal\": \"119.98\"\n      }\n    ],\n    \"payments_count\": 0,\n    \"created_at\": \"2026-06-24T10:05:00+00:00\",\n    \"updated_at\": \"2026-06-24T10:05:00+00:00\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/9999",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "9999"]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"The requested resource was not found.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Updated Name\",\n  \"customer_email\": \"updated@example.com\",\n  \"status\": \"confirmed\",\n  \"items\": [\n    {\n      \"product_name\": \"New Product\",\n      \"quantity\": 3,\n      \"price\": 25.00\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            },
+            "description": "Partially update an order. All fields are optional (`sometimes`). When `items` is provided, existing items are replaced and the total is recalculated."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"customer_name\": \"Updated Name\",\n  \"items\": [\n    { \"product_name\": \"New Product\", \"quantity\": 3, \"price\": 25.00 }\n  ]\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"customer_name\": \"Updated Name\",\n    \"customer_email\": \"john@example.com\",\n    \"status\": \"confirmed\",\n    \"total\": \"75.00\",\n    \"items\": [\n      {\n        \"id\": 7,\n        \"product_name\": \"New Product\",\n        \"quantity\": 3,\n        \"price\": \"25.00\",\n        \"subtotal\": \"75.00\"\n      }\n    ],\n    \"payments_count\": 0,\n    \"created_at\": \"2026-06-24T10:05:00+00:00\",\n    \"updated_at\": \"2026-06-24T10:10:00+00:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            },
+            "description": "Delete an order. Returns 409 Conflict if the order has associated payments."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order deleted successfully\"\n}"
+            },
+            {
+              "name": "409 Conflict (has payments)",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/2",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "2"]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Order cannot be deleted because it has associated payments.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Process and view payments. All requests require a valid Bearer token. Payments can only be processed for *confirmed* orders and are scoped to the authenticated user.",
+      "item": [
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments?per_page=15&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Optional. 1-100 (default 15)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number"
+                }
+              ]
+            },
+            "description": "List the authenticated user's payments with pagination."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/payments",
+                  "host": ["{{base_url}}"],
+                  "path": ["payments"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"payment_id\": \"pay_a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n      \"order_id\": 2,\n      \"payment_method\": \"paypal\",\n      \"status\": \"successful\",\n      \"amount\": \"219.96\",\n      \"gateway_response\": {\n        \"transaction_id\": \"pp_09876543-21fe-dcba-0987-6543210fedcba\",\n        \"message\": \"PayPal payment processed successfully.\"\n      },\n      \"created_at\": \"2026-06-24T10:15:00+00:00\"\n    }\n  ],\n  \"links\": {\n    \"first\": \"http://localhost:8000/api/payments?page=1\",\n    \"last\": \"http://localhost:8000/api/payments?page=1\",\n    \"prev\": null,\n    \"next\": null\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"per_page\": 15,\n    \"total\": 1,\n    \"last_page\": 1\n  },\n  \"success\": true,\n  \"message\": \"Payments retrieved successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": {{order_id}},\n  \"payment_method\": \"paypal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "Process a payment for a *confirmed* order. The gateway simulates realistic success/failure rates (PayPal 90%, Credit Card 85%). The payment ID is auto-saved to the `payment_id` variable via the Tests script."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.data && json.data.id) {",
+                  "    pm.environment.set('payment_id', json.data.id);",
+                  "    console.log('Payment ID saved: ' + json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/payments",
+                  "host": ["{{base_url}}"],
+                  "path": ["payments"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"order_id\": 1,\n  \"payment_method\": \"paypal\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Payment processed successfully\",\n  \"data\": {\n    \"id\": 2,\n    \"payment_id\": \"pay_a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"order_id\": 1,\n    \"payment_method\": \"paypal\",\n    \"status\": \"successful\",\n    \"amount\": \"119.98\",\n    \"gateway_response\": {\n      \"transaction_id\": \"pp_09876543-21fe-dcba-0987-6543210fedcba\",\n      \"message\": \"PayPal payment processed successfully.\"\n    },\n    \"created_at\": \"2026-06-24T10:15:00+00:00\"\n  }\n}"
+            },
+            {
+              "name": "422 Business Rule (order not confirmed)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/payments",
+                  "host": ["{{base_url}}"],
+                  "path": ["payments"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"order_id\": 1,\n  \"payment_method\": \"paypal\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Payments can only be processed for confirmed orders.\"\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/payments",
+                  "host": ["{{base_url}}"],
+                  "path": ["payments"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_requestbody": {
+                "mode": "raw",
+                "raw": "{\n  \"order_id\": 9999,\n  \"payment_method\": \"crypto\"\n}"
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": {\n    \"order_id\": [\"The specified order does not exist.\"],\n    \"payment_method\": [\"The payment method must be one of: credit_card, paypal.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Show Payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            },
+            "description": "Retrieve a single payment by ID. Scoped to the authenticated user (returns 404 for other users' payments)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/payments/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["payments", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Payment retrieved successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"payment_id\": \"pay_a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"order_id\": 2,\n    \"payment_method\": \"paypal\",\n    \"status\": \"successful\",\n    \"amount\": \"219.96\",\n    \"gateway_response\": {\n      \"transaction_id\": \"pp_09876543-21fe-dcba-0987-6543210fedcba\",\n      \"message\": \"PayPal payment processed successfully.\"\n    },\n    \"created_at\": \"2026-06-24T10:15:00+00:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Payments by Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "payments"]
+            },
+            "description": "List all payments for a specific order. Scoped to the authenticated user."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/2/payments",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "2", "payments"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order payments retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"payment_id\": \"pay_a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n      \"order_id\": 2,\n      \"payment_method\": \"paypal\",\n      \"status\": \"successful\",\n      \"amount\": \"219.96\",\n      \"gateway_response\": {\n        \"transaction_id\": \"pp_09876543-21fe-dcba-0987-6543210fedcba\",\n        \"message\": \"PayPal payment processed successfully.\"\n      },\n      \"created_at\": \"2026-06-24T10:15:00+00:00\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
