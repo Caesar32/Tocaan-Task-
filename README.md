@@ -687,6 +687,22 @@ php artisan test
 
 ---
 
+## Assumptions & Notes
+
+The following assumptions were made during the design and implementation of this project:
+
+- **Simulated Gateways** — Payment gateways (`PayPal`, `Credit Card`) operate in **simulation mode** with configurable success rates (90% and 85% respectively). No real payment provider SDKs are integrated; the architecture is ready for live integration as a drop-in replacement.
+- **Single-Role System** — The API uses a flat user model with no role-based access control (RBAC). All authenticated users share the same permissions. Adding roles (admin, manager, customer) is listed under [Future Improvements](#future-improvements).
+- **Server-Side Totals** — Order totals are **always calculated server-side** from `quantity × price` on each line item. Any `total` value sent by the client is ignored to prevent tampering.
+- **SQLite for Testing** — The default test database is SQLite (in-memory) for zero-setup CI compatibility. Production deployments should use MySQL or PostgreSQL.
+- **No Pagination Limit on Payments** — Payment lists share the same `per_page` bounds (1–100) as orders. If a single order accumulates hundreds of payments, additional cursor-based pagination may be needed.
+- **Soft Deletes Not Used** — Orders and payments use **hard deletes**. Deleted records are permanently removed. If audit trails or recovery is required, soft deletes should be introduced.
+- **Synchronous Payment Processing** — All gateway calls are synchronous. Under high load, queued job processing (listed in [Future Improvements](#future-improvements)) is recommended to avoid blocking HTTP requests.
+- **Currency Not Enforced** — Prices and amounts are stored as `decimal(10,2)` without a currency column. The system assumes a single currency throughout. Multi-currency support would require a `currency` column and exchange-rate handling.
+- **One Payment Per Request** — Each `POST /api/payments` call processes a single payment for one order. Batch or split payments are not supported in the current design.
+
+---
+
 ## Future Improvements
 
 The current implementation is a solid, production-shaped foundation. Recommended next steps:
