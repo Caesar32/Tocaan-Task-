@@ -6,7 +6,7 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
 
 class OrderService
 {
@@ -15,7 +15,7 @@ class OrderService
      */
     public function list(array $filters = []): LengthAwarePaginator
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
         $perPage = $filters['per_page'] ?? 15;
 
         $query = Order::query()
@@ -39,7 +39,7 @@ class OrderService
      */
     public function create(array $data): Order
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
 
         return \DB::transaction(function () use ($user, $data) {
             $order = Order::create([
@@ -63,7 +63,7 @@ class OrderService
      */
     public function findById(int $id): Order
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
 
         return Order::where('id', $id)
             ->where('user_id', $user->id)

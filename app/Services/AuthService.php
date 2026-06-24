@@ -5,9 +5,6 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\TokenExpiredException;
-use Tymon\JWTAuth\Exceptions\TokenInvalidException;
-use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthService
 {
@@ -61,7 +58,13 @@ class AuthService
      */
     public function getAuthenticatedUser(): User
     {
-        return JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
+
+        if (! $user) {
+            throw new \Illuminate\Auth\AuthenticationException('Unauthenticated');
+        }
+
+        return $user;
     }
 
     /**

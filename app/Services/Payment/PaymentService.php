@@ -7,8 +7,8 @@ use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class PaymentService
 {
@@ -17,7 +17,7 @@ class PaymentService
      */
     public function list(array $filters = []): LengthAwarePaginator
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
         $perPage = $filters['per_page'] ?? 15;
 
         return Payment::query()
@@ -33,7 +33,7 @@ class PaymentService
      */
     public function findById(int $id): Payment
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
 
         return Payment::where('id', $id)
             ->whereHas('order', fn ($q) => $q->where('user_id', $user->id))
@@ -48,7 +48,7 @@ class PaymentService
      */
     public function getByOrderId(int $orderId)
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
 
         $order = Order::where('id', $orderId)
             ->where('user_id', $user->id)
@@ -66,7 +66,7 @@ class PaymentService
      */
     public function process(array $data): Payment
     {
-        $user = JWTAuth::parseToken()->user();
+        $user = Auth::guard('jwt')->user();
 
         // Load order scoped to authenticated user
         $order = Order::where('id', $data['order_id'])
