@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,4 +29,10 @@ Route::middleware('auth:jwt')->group(function () {
 
     // Orders
     Route::apiResource('/orders', OrderController::class);
+
+    // Order Payments (nested)
+    Route::get('/orders/{order}/payments', [PaymentController::class, 'getByOrder']);
+
+    // Payments
+    Route::apiResource('/payments', PaymentController::class)->only(['index', 'show', 'store']);
 });

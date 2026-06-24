@@ -54,6 +54,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Order::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasManyThrough(Payment::class, Order::class);
+    }
+
     /**
      * Get the identifier that will be stored in the JWT subject claim.
      */
